@@ -1,0 +1,3261 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ORBIT — On-Device AI Assistant (Zero Cloud)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ==========================================================================
+   DESIGN TOKENS — PREMIUM WHITE/PORCELAIN THEME WITH ELECTRIC ACCENTS
+   ========================================================================== */
+    :root {
+      /* Canvas & Screen Surface */
+      --canvas-bg: #f5f7fb;
+      --screen-bg: #ffffff;
+      --surface-card: #ffffff;
+      --surface-subtle: #f8fafc;
+      --surface-tint: #f1f5f9;
+      --surface-active: #e2e8f0;
+
+      /* Hairline Borders */
+      --line: rgba(15, 23, 42, 0.08);
+      --line-subtle: rgba(15, 23, 42, 0.05);
+      --line-strong: rgba(15, 23, 42, 0.16);
+      --line-focus: #3b82f6;
+
+      /* Typography / Ink */
+      --ink-primary: #0f172a;
+      /* Deep slate slate-900 */
+      --ink-secondary: #334155;
+      /* Slate-700 */
+      --ink-dim: #64748b;
+      /* Slate-500 */
+      --ink-faint: #94a3b8;
+      /* Slate-400 */
+      --ink-inverse: #ffffff;
+
+      /* Vibrant Brand & Semantic Accents */
+      --cyan-core: #0ea5e9;
+      --blue-brand: #2563eb;
+      --indigo-deep: #4338ca;
+      --violet-brand: #7c3aed;
+      --emerald-green: #10b981;
+      --amber-warning: #f59e0b;
+      --rose-danger: #f43f5e;
+
+      /* Gradients */
+      --grad-brand: linear-gradient(135deg, #0ea5e9 0%, #3b82f6 50%, #7c3aed 100%);
+      --grad-subtle-blue: linear-gradient(180deg, #f0f7ff 0%, #ffffff 100%);
+      --grad-subtle-purple: linear-gradient(180deg, #fbf7ff 0%, #ffffff 100%);
+      --grad-orb-core: radial-gradient(circle at 35% 30%, #e0f7ff 0%, #38bdf8 25%, #2563eb 58%, #312e81 85%, #1e1b4b 100%);
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-md: 0 4px 16px -2px rgba(15, 23, 42, 0.06), 0 2px 6px -1px rgba(15, 23, 42, 0.03);
+      --shadow-lg: 0 10px 25px -4px rgba(15, 23, 42, 0.08), 0 4px 12px -2px rgba(15, 23, 42, 0.04);
+      --shadow-float: 0 20px 40px -8px rgba(15, 23, 42, 0.12);
+
+      /* Fonts */
+      --font-display: 'Sora', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'IBM Plex Mono', monospace;
+    }
+
+    /* ==========================================================================
+   BASE RESET & GLOBAL WORKSPACE
+   ========================================================================== */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100%;
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse 900px 500px at 15% -5%, rgba(14, 165, 233, 0.08), transparent 60%),
+        radial-gradient(ellipse 900px 600px at 85% 105%, rgba(124, 58, 237, 0.07), transparent 60%),
+        var(--canvas-bg);
+      color: var(--ink-primary);
+      font-family: var(--font-body);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 30px 20px;
+      overflow-x: hidden;
+    }
+
+    /* Stage container holding companion guide & phone */
+    .stage {
+      display: flex;
+      gap: 36px;
+      align-items: center;
+      justify-content: center;
+      max-width: 1260px;
+      width: 100%;
+    }
+
+    /* ==========================================================================
+   PHONE HARDWARE FRAME (SLEEK OBSIDIAN TITANIUM iQOO FLAGSHIP)
+   ========================================================================== */
+    .phone-outer {
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .phone {
+      width: 392px;
+      height: 844px;
+      border-radius: 54px;
+      background: #0f1117;
+      /* Dark Obsidian Bezel requested by user to look like real phone */
+      padding: 13px;
+      box-shadow:
+        0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+        0 0 0 1.5px rgba(0, 0, 0, 0.8),
+        0 25px 60px -10px rgba(15, 23, 42, 0.35),
+        0 0 80px -10px rgba(14, 165, 233, 0.18);
+      position: relative;
+    }
+
+    /* Hardware Buttons */
+    .phone::after {
+      content: "";
+      position: absolute;
+      right: -3px;
+      top: 175px;
+      width: 3px;
+      height: 55px;
+      background: #232733;
+      border-radius: 0 3px 3px 0;
+      box-shadow: 0 80px 0 #232733, 0 145px 0 #232733;
+    }
+
+    /* Notch / Dynamic Island */
+    .phone-island {
+      position: absolute;
+      top: 26px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 96px;
+      height: 24px;
+      background: #000000;
+      border-radius: 16px;
+      z-index: 60;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 8px;
+      gap: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+
+    .phone-island .lens {
+      width: 10px;
+      height: 10px;
+      background: radial-gradient(circle at 35% 35%, #1e293b 0%, #030712 70%);
+      border-radius: 50%;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .phone-island .sensor {
+      width: 6px;
+      height: 6px;
+      background: #090d16;
+      border-radius: 50%;
+    }
+
+    /* ==========================================================================
+   PHONE SCREEN (CRISP WHITE INTERIOR)
+   ========================================================================== */
+    .screen {
+      width: 100%;
+      height: 100%;
+      background: var(--screen-bg);
+      border-radius: 42px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.04);
+    }
+
+    /* Status Bar */
+    .statusbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 24px 6px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ink-secondary);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 50;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+    }
+
+    .status-left {
+      font-weight: 700;
+      letter-spacing: -0.01em;
+    }
+
+    .status-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .offline-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 6px;
+      background: rgba(16, 185, 129, 0.1);
+      color: #059669;
+      border-radius: 6px;
+      font-size: 10px;
+      font-family: var(--font-mono);
+      font-weight: 600;
+    }
+
+    /* Viewport & View Transitions */
+    .view-port {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .view {
+      position: absolute;
+      inset: 0;
+      overflow-y: auto;
+      overflow-x: hidden;
+      padding: 12px 18px 90px;
+      opacity: 0;
+      transform: translateY(8px) scale(0.99);
+      pointer-events: none;
+      transition: opacity 0.26s cubic-bezier(0.16, 1, 0.3, 1), transform 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+      scrollbar-width: none;
+    }
+
+    .view::-webkit-scrollbar {
+      display: none;
+    }
+
+    .view.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: auto;
+    }
+
+    /* Page Header Typography */
+    .h-page {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin: 4px 0 14px;
+      letter-spacing: -0.02em;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .page-sub {
+      font-size: 13px;
+      color: var(--ink-dim);
+      margin: -8px 0 16px;
+      line-height: 1.45;
+    }
+
+    .section-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      margin: 18px 0 10px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* ==========================================================================
+   LIVELY LIVING BLUE SPHERE (ORBIT CORE)
+   ========================================================================== */
+    .orb-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 10px 0 16px;
+      position: relative;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .orb-halo {
+      position: relative;
+      width: 170px;
+      height: 170px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Wave rings pulsing outwards */
+    .orb-pulse-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1.5px solid rgba(14, 165, 233, 0.3);
+      animation: orbRipples 3.2s cubic-bezier(0.2, 0.8, 0.4, 1) infinite;
+      pointer-events: none;
+    }
+
+    .orb-pulse-ring:nth-child(2) {
+      animation-delay: 1.1s;
+    }
+
+    .orb-pulse-ring:nth-child(3) {
+      animation-delay: 2.2s;
+    }
+
+    @keyframes orbRipples {
+      0% {
+        width: 90px;
+        height: 90px;
+        opacity: 0.8;
+        transform: scale(0.9);
+      }
+
+      100% {
+        width: 190px;
+        height: 190px;
+        opacity: 0;
+        transform: scale(1.15);
+      }
+    }
+
+
+
+    /* The Core Sphere */
+    .orb-core {
+      width: 96px;
+      height: 96px;
+      border-radius: 50%;
+      background: var(--grad-orb-core);
+      box-shadow:
+        0 0 25px rgba(56, 189, 248, 0.45),
+        0 0 50px rgba(37, 99, 235, 0.25),
+        inset 0 2px 14px rgba(255, 255, 255, 0.6),
+        inset -4px -4px 18px rgba(30, 27, 75, 0.7);
+      position: relative;
+      z-index: 10;
+      transition: transform 0.3s ease, filter 0.3s ease;
+      animation: orbBreath 4.5s ease-in-out infinite;
+    }
+
+    .orb-container:hover .orb-core {
+      transform: scale(1.06);
+      filter: brightness(1.08);
+    }
+
+    .orb-container:active .orb-core {
+      transform: scale(0.96);
+    }
+
+    @keyframes orbBreath {
+
+      0%,
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 22px rgba(56, 189, 248, 0.4), 0 0 45px rgba(37, 99, 235, 0.2);
+      }
+
+      50% {
+        transform: scale(1.04);
+        box-shadow: 0 0 35px rgba(56, 189, 248, 0.6), 0 0 65px rgba(124, 58, 237, 0.35);
+      }
+    }
+
+    /* Hardware Telemetry Badge */
+    .orb-status-pill {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 6px 14px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-secondary);
+      font-weight: 500;
+      box-shadow: var(--shadow-sm);
+      transition: all 0.2s ease;
+    }
+
+    .orb-status-pill .beacon-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--emerald-green);
+      box-shadow: 0 0 8px var(--emerald-green);
+      animation: beaconPulse 1.8s infinite;
+    }
+
+    @keyframes beaconPulse {
+
+      0%,
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+
+      50% {
+        opacity: 0.4;
+        transform: scale(0.85);
+      }
+    }
+
+    /* ==========================================================================
+   CARD SYSTEM & QUICK ACTIONS
+   ========================================================================== */
+    .card {
+      background: var(--surface-card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-bottom: 12px;
+      box-shadow: var(--shadow-md);
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+      position: relative;
+    }
+
+    .card:hover {
+      border-color: var(--line-strong);
+      box-shadow: var(--shadow-lg);
+    }
+
+    .card.clickable {
+      cursor: pointer;
+    }
+
+    .card.clickable:active {
+      transform: scale(0.985);
+    }
+
+    /* Quick Action Grid */
+    .qa-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin: 12px 0 16px;
+    }
+
+    .qa-card {
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+
+    .qa-card:hover {
+      background: #ffffff;
+      border-color: var(--blue-brand);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .qa-card:active {
+      transform: scale(0.97);
+    }
+
+    .qa-icon-wrap {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qa-icon-wrap.tint-blue {
+      background: rgba(14, 165, 233, 0.12);
+      color: #0284c7;
+    }
+
+    .qa-icon-wrap.tint-purple {
+      background: rgba(124, 58, 237, 0.12);
+      color: #7c3aed;
+    }
+
+    .qa-icon-wrap.tint-emerald {
+      background: rgba(16, 185, 129, 0.12);
+      color: #059669;
+    }
+
+    .qa-icon-wrap.tint-amber {
+      background: rgba(245, 158, 11, 0.12);
+      color: #d97706;
+    }
+
+    .qa-icon-wrap.tint-rose {
+      background: rgba(244, 63, 94, 0.12);
+      color: #e11d48;
+    }
+
+    .qa-title {
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .qa-sub {
+      font-size: 11px;
+      color: var(--ink-dim);
+      line-height: 1.35;
+    }
+
+    /* ==========================================================================
+   BUTTONS
+   ========================================================================== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: 12px;
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      user-select: none;
+    }
+
+    .btn-primary {
+      background: var(--grad-brand);
+      color: #ffffff;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);
+    }
+
+    .btn-primary:hover {
+      filter: brightness(1.06);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 16px rgba(37, 99, 235, 0.32);
+    }
+
+    .btn-primary:active {
+      transform: scale(0.98);
+    }
+
+    .btn-ghost {
+      background: var(--surface-subtle);
+      color: var(--ink-secondary);
+      border: 1px solid var(--line);
+    }
+
+    .btn-ghost:hover {
+      background: var(--surface-tint);
+      color: var(--ink-primary);
+      border-color: var(--line-strong);
+    }
+
+    .btn-ghost:active {
+      transform: scale(0.98);
+    }
+
+    /* ==========================================================================
+   NOTIFICATION SYSTEM (PRIORITY PULSE VIEW)
+   ========================================================================== */
+    .notif {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-left: 4px solid var(--blue-brand);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: transform 0.15s ease;
+    }
+
+    .notif.urgent {
+      border-left-color: var(--rose-danger);
+      background: linear-gradient(90deg, rgba(244, 63, 94, 0.05) 0%, #ffffff 60%);
+    }
+
+    .notif.important {
+      border-left-color: var(--amber-warning);
+      background: linear-gradient(90deg, rgba(245, 158, 11, 0.05) 0%, #ffffff 60%);
+    }
+
+    .notif.normal {
+      border-left-color: var(--blue-brand);
+      background: linear-gradient(90deg, rgba(14, 165, 233, 0.05) 0%, #ffffff 60%);
+    }
+
+    .notif-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 4px;
+    }
+
+    .notif-app {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--ink-dim);
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .notif-time {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--ink-faint);
+    }
+
+    .notif-title {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: var(--ink-primary);
+      margin-bottom: 3px;
+    }
+
+    .notif-body {
+      font-size: 12px;
+      color: var(--ink-secondary);
+      line-height: 1.4;
+    }
+
+    .notif-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .silenced-box {
+      background: var(--surface-subtle);
+      border: 1px dashed var(--line-strong);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-size: 12px;
+      color: var(--ink-dim);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+    }
+
+    .silenced-badge {
+      background: var(--surface-active);
+      color: var(--ink-dim);
+      padding: 3px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    /* ==========================================================================
+   MEMORY VIEW (SEMANTIC VECTOR STORE)
+   ========================================================================== */
+    .search-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 10px 14px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .search-bar input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: var(--font-body);
+      font-size: 13px;
+      color: var(--ink-primary);
+      outline: none;
+    }
+
+    .search-bar input::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .mem-node {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mem-node:hover {
+      border-color: var(--blue-brand);
+      transform: translateX(2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .mem-icon-badge {
+      width: 38px;
+      height: 38px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* ==========================================================================
+   SNAP & ASK VIEW (CAMERA OCR & VISION)
+   ========================================================================== */
+    .cam-frame {
+      position: relative;
+      width: 100%;
+      height: 240px;
+      border-radius: 20px;
+      background: #0f172a;
+      overflow: hidden;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 12px;
+      margin-bottom: 14px;
+    }
+
+    .cam-overlay {
+      position: absolute;
+      inset: 0;
+      background: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.03) 0px, rgba(255, 255, 255, 0.03) 1px, transparent 1px, transparent 4px);
+      pointer-events: none;
+    }
+
+    .cam-target-box {
+      position: absolute;
+      top: 45px;
+      left: 35px;
+      right: 35px;
+      bottom: 50px;
+      border: 2px solid var(--cyan-core);
+      border-radius: 8px;
+      background: rgba(14, 165, 233, 0.08);
+      box-shadow: 0 0 16px rgba(14, 165, 233, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .cam-target-box .scan-line {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #38bdf8, transparent);
+      animation: scanMotion 2s ease-in-out infinite;
+    }
+
+    @keyframes scanMotion {
+
+      0%,
+      100% {
+        top: 10%;
+        opacity: 0.2;
+      }
+
+      50% {
+        top: 85%;
+        opacity: 0.9;
+      }
+    }
+
+    .cam-tag {
+      align-self: flex-start;
+      background: rgba(15, 23, 42, 0.75);
+      color: #ffffff;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      z-index: 5;
+    }
+
+    /* ==========================================================================
+   BRAIN DUMP (SPEECH TO STRUCTURED TASKS)
+   ========================================================================== */
+    .audio-visualizer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      height: 48px;
+      padding: 6px 0;
+      margin: 10px 0;
+    }
+
+    .audio-bar {
+      width: 4px;
+      background: var(--blue-brand);
+      border-radius: 4px;
+      animation: soundBar 1.2s ease-in-out infinite;
+    }
+
+    .audio-bar:nth-child(2) {
+      animation-delay: 0.15s;
+      height: 32px;
+    }
+
+    .audio-bar:nth-child(3) {
+      animation-delay: 0.3s;
+      height: 44px;
+    }
+
+    .audio-bar:nth-child(4) {
+      animation-delay: 0.45s;
+      height: 26px;
+    }
+
+    .audio-bar:nth-child(5) {
+      animation-delay: 0.6s;
+      height: 38px;
+    }
+
+    .audio-bar:nth-child(6) {
+      animation-delay: 0.2s;
+      height: 20px;
+    }
+
+    @keyframes soundBar {
+
+      0%,
+      100% {
+        transform: scaleY(0.4);
+        opacity: 0.5;
+      }
+
+      50% {
+        transform: scaleY(1);
+        opacity: 1;
+      }
+    }
+
+    .action-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 12px 14px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .action-num-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--surface-subtle);
+      color: var(--blue-brand);
+    }
+
+    .action-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .action-time {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-dim);
+    }
+
+    /* ==========================================================================
+   ASK ORBIT (CITATIONS & ON-DEVICE REASONING)
+   ========================================================================== */
+    .chat-bubble {
+      padding: 12px 16px;
+      border-radius: 16px;
+      font-size: 13px;
+      line-height: 1.45;
+      margin-bottom: 12px;
+      max-width: 90%;
+    }
+
+    .chat-user {
+      background: var(--surface-tint);
+      color: var(--ink-primary);
+      margin-left: auto;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-orbit {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      color: var(--ink-primary);
+      margin-right: auto;
+      border-bottom-left-radius: 4px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .source-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--blue-brand);
+      font-weight: 500;
+      margin-top: 6px;
+      margin-right: 4px;
+      cursor: pointer;
+    }
+
+    .source-chip:hover {
+      background: #ffffff;
+      border-color: var(--blue-brand);
+    }
+
+    /* ==========================================================================
+   MORNING BRIEF & INTERACTIVE PLAN MY DAY (TODOS & SCHEDULE)
+   ========================================================================== */
+    .conflict-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: rgba(245, 158, 11, 0.09);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 12px;
+      font-size: 12.5px;
+      color: #b45309;
+      font-weight: 600;
+      margin-bottom: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .conflict-badge.resolved {
+      background: rgba(16, 185, 129, 0.09);
+      border-color: rgba(16, 185, 129, 0.25);
+      color: #065f46;
+    }
+
+    /* Day Plan Schedule Blocks */
+    .plan-schedule {
+      margin-top: 14px;
+      display: none;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .plan-schedule.show {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin-bottom: 8px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .todo-item:hover {
+      border-color: var(--blue-brand);
+    }
+
+    .todo-checkbox {
+      width: 18px;
+      height: 18px;
+      border-radius: 5px;
+      border: 1.5px solid var(--ink-faint);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: all 0.15s ease;
+    }
+
+    .todo-item.completed .todo-checkbox {
+      background: var(--emerald-green);
+      border-color: var(--emerald-green);
+      color: #ffffff;
+    }
+
+    .todo-item.completed .todo-label {
+      text-decoration: line-through;
+      color: var(--ink-faint);
+    }
+
+    .todo-label {
+      font-size: 12.5px;
+      font-weight: 500;
+      color: var(--ink-primary);
+      flex: 1;
+    }
+
+    .todo-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--surface-subtle);
+      color: var(--ink-dim);
+    }
+
+    .timeline-slot {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 10px 0;
+      border-left: 2px solid var(--line);
+      margin-left: 8px;
+      padding-left: 14px;
+      position: relative;
+    }
+
+    .timeline-slot::before {
+      content: "";
+      position: absolute;
+      left: -5px;
+      top: 14px;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--blue-brand);
+      border: 2px solid #ffffff;
+      box-shadow: 0 0 0 1px var(--line);
+    }
+
+    .timeline-slot.resolved-slot::before {
+      background: var(--emerald-green);
+    }
+
+    .time-stamp {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--ink-dim);
+      width: 60px;
+      flex-shrink: 0;
+    }
+
+    .time-content {
+      flex: 1;
+    }
+
+    .time-title {
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .time-sub {
+      font-size: 11px;
+      color: var(--ink-dim);
+      margin-top: 1px;
+    }
+
+    /* ==========================================================================
+   INSIDE ORBIT (INTERACTIVE ENGINE SPECIFICATIONS)
+   ========================================================================== */
+    .engine-card {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-sm);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .engine-card:hover {
+      border-color: var(--blue-brand);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .engine-icon-wrap {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .spec-drawer {
+      background: var(--surface-subtle);
+      border: 1px solid var(--line-strong);
+      border-radius: 16px;
+      padding: 16px;
+      margin: -4px 0 14px;
+      display: none;
+      animation: fadeIn 0.24s ease forwards;
+    }
+
+    .spec-drawer.open {
+      display: block;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 0;
+      font-size: 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .spec-row:last-child {
+      border-bottom: none;
+    }
+
+    .spec-k {
+      color: var(--ink-dim);
+      font-family: var(--font-body);
+    }
+
+    .spec-v {
+      font-family: var(--font-mono);
+      font-weight: 600;
+      color: var(--ink-primary);
+    }
+
+    .benchmark-btn {
+      margin-top: 10px;
+      width: 100%;
+      font-size: 11.5px;
+      padding: 8px 12px;
+    }
+
+    /* ==========================================================================
+   BOTTOM NAVIGATION (TABBAR)
+   ========================================================================== */
+    .tabbar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 74px;
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      padding: 0 8px 14px;
+      z-index: 40;
+    }
+
+    .tab {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: none;
+      border: none;
+      color: var(--ink-faint);
+      font-size: 10.5px;
+      font-weight: 500;
+      font-family: var(--font-body);
+      cursor: pointer;
+      padding: 6px 12px;
+      border-radius: 12px;
+      transition: all 0.16s ease;
+    }
+
+    .tab svg {
+      width: 20px;
+      height: 20px;
+      transition: all 0.16s ease;
+    }
+
+    .tab:hover {
+      color: var(--ink-secondary);
+    }
+
+    .tab.active {
+      color: var(--blue-brand);
+    }
+
+    .tab.active svg {
+      stroke: var(--blue-brand);
+      transform: translateY(-2px);
+    }
+
+    /* ==========================================================================
+   JUDGE TOUR COMPANION DECK & CONTROLS (OG FEATURE)
+   ========================================================================== */
+    .companion-deck {
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex-shrink: 0;
+    }
+
+    .deck-card {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: var(--shadow-lg);
+      position: relative;
+    }
+
+    .deck-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      background: rgba(37, 99, 235, 0.08);
+      color: var(--blue-brand);
+      border-radius: 8px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+
+    .deck-title {
+      font-family: var(--font-display);
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+
+    .deck-desc {
+      font-size: 13px;
+      color: var(--ink-secondary);
+      line-height: 1.55;
+      margin-bottom: 16px;
+    }
+
+    /* Tour Control Bar */
+    .tour-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 8px 12px;
+      margin-bottom: 16px;
+    }
+
+    .tour-btn {
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .tour-btn:hover {
+      border-color: var(--blue-brand);
+      color: var(--blue-brand);
+    }
+
+    .tour-btn.play-btn {
+      background: var(--grad-brand);
+      border: none;
+      color: #ffffff;
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+    }
+
+    .speed-toggle {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      cursor: pointer;
+      color: var(--ink-secondary);
+    }
+
+    .speed-toggle.active-2x {
+      background: var(--ink-primary);
+      color: #ffffff;
+      border-color: var(--ink-primary);
+    }
+
+    /* Step Progress Indicator */
+    .tour-progress-bar {
+      height: 4px;
+      background: var(--surface-active);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 14px;
+    }
+
+    .tour-progress-fill {
+      height: 100%;
+      background: var(--grad-brand);
+      width: 10%;
+      transition: width 0.3s ease;
+    }
+
+    /* Judge Pitch Note Box */
+    .pitch-info-box {
+      background: var(--surface-subtle);
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+    }
+
+    .pitch-kicker {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      color: var(--ink-dim);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 4px;
+    }
+
+    .pitch-headline {
+      font-family: var(--font-display);
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ink-primary);
+      margin-bottom: 6px;
+    }
+
+    .pitch-body {
+      font-size: 12px;
+      color: var(--ink-secondary);
+      line-height: 1.5;
+    }
+
+    .pitch-stats-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .stat-pill {
+      flex: 1;
+      padding: 6px 8px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .stat-pill .num {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      font-size: 12px;
+      color: var(--blue-brand);
+    }
+
+    .stat-pill .lbl {
+      font-size: 9.5px;
+      color: var(--ink-dim);
+    }
+
+    /* Quick Jump Feature Rail */
+    .quick-rail-title {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--ink-dim);
+      letter-spacing: 0.06em;
+      margin: 14px 0 8px;
+    }
+
+    .rail-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+    }
+
+    .rail-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 10px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font-size: 11.5px;
+      font-weight: 500;
+      color: var(--ink-secondary);
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: left;
+    }
+
+    .rail-btn:hover {
+      border-color: var(--blue-brand);
+      color: var(--blue-brand);
+    }
+
+    .rail-btn.active {
+      background: var(--surface-subtle);
+      border-color: var(--blue-brand);
+      color: var(--blue-brand);
+      font-weight: 600;
+    }
+
+    /* Spotlight pulse during tour */
+    .spotlight-active {
+      outline: 2.5px solid var(--blue-brand) !important;
+      outline-offset: 2px;
+      box-shadow: 0 0 16px rgba(37, 99, 235, 0.4) !important;
+      animation: spotlightBreath 1.5s infinite;
+    }
+
+    @keyframes spotlightBreath {
+
+      0%,
+      100% {
+        outline-color: var(--blue-brand);
+      }
+
+      50% {
+        outline-color: var(--violet-brand);
+      }
+    }
+
+    /* ==========================================================================
+   TOAST NOTIFICATION ENGINE
+   ========================================================================== */
+    .toast-wrap {
+      position: absolute;
+      top: 56px;
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .toast {
+      background: rgba(15, 23, 42, 0.92);
+      color: #ffffff;
+      backdrop-filter: blur(12px);
+      padding: 10px 18px;
+      border-radius: 24px;
+      font-size: 12px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      box-shadow: var(--shadow-float);
+      opacity: 0;
+      transform: translateY(-12px) scale(0.95);
+      transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Architecture Flow Nodes (Cross-Device) */
+    .flow-diagram {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .flow-step {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      padding: 10px 14px;
+      font-size: 12px;
+    }
+
+    .flow-arrow {
+      display: flex;
+      justify-content: center;
+      color: var(--ink-faint);
+      margin: -4px 0;
+    }
+
+    /* Responsive adjustment */
+    @media (max-width: 900px) {
+      .stage {
+        flex-direction: column-reverse;
+      }
+
+      .companion-deck {
+        width: 390px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="stage">
+
+    <!-- ========================================================================
+       JUDGE COMPANION DECK — PITCH AUTO-TOUR ("OG FEATURE")
+       ======================================================================== -->
+    <div class="companion-deck">
+      <div class="deck-card">
+        <div class="deck-badge">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+          </svg>
+          iQOO HACKATHON
+        </div>
+        <h2 class="deck-title">ORBIT Pitch Demo</h2>
+        <p class="deck-desc">
+          A private AI assistant running 100% on-device. 4 models, 7 features, 0 network calls, 0 cloud credits.
+        </p>
+
+        <!-- Auto Tour Controls -->
+        <div class="tour-controls">
+          <button class="tour-btn" id="tourPrevBtn" title="Previous Feature" onclick="tourPrev()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="19 20 9 12 19 4 19 20" />
+              <line x1="5" x2="5" y1="19" y2="5" />
+            </svg>
+          </button>
+
+          <button class="tour-btn play-btn" id="tourPlayBtn" title="Play Judge Pitch Tour" onclick="toggleTour()">
+            <svg id="playIcon" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3" />
+            </svg>
+            <svg id="pauseIcon" style="display:none;" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+              <rect x="6" y="4" width="4" height="16" />
+              <rect x="14" y="4" width="4" height="16" />
+            </svg>
+          </button>
+
+          <button class="tour-btn" id="tourNextBtn" title="Next Feature" onclick="tourNext()">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="5 4 15 12 5 20 5 4" />
+              <line x1="19" x2="19" y1="5" y2="19" />
+            </svg>
+          </button>
+
+          <button class="speed-toggle" id="speedToggleBtn" onclick="toggleSpeed()">1x SPEED</button>
+
+          <button class="tour-btn" title="Restart Tour" onclick="restartTour()">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
+              <path d="M3 3v5h5" />
+              <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16" />
+              <path d="M16 21h5v-5" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Tour Progress -->
+        <div class="tour-progress-bar">
+          <div class="tour-progress-fill" id="tourProgressFill"></div>
+        </div>
+
+        <!-- Live Judge Context Card -->
+        <div class="pitch-info-box" id="pitchBox">
+          <div class="pitch-kicker" id="pitchStepKicker">STEP 1 OF 9 · EXECUTIVE OVERVIEW</div>
+          <div class="pitch-headline" id="pitchHeadline">Living ORBIT Core &amp; Reflex Tier</div>
+          <div class="pitch-body" id="pitchBody">
+            Welcome Judges. ORBIT eliminates cloud friction. The blue sphere demonstrates our on-device reflex layer
+            responding instantly without internet access.
+          </div>
+          <div class="pitch-stats-row">
+            <div class="stat-pill">
+              <div class="num" id="pitchLatency">&lt; 100 ms</div>
+              <div class="lbl">Reflex Latency</div>
+            </div>
+            <div class="stat-pill">
+              <div class="num" id="pitchEgress">0 Bytes</div>
+              <div class="lbl">Cloud Egress</div>
+            </div>
+            <div class="stat-pill">
+              <div class="num" id="pitchEngine">NPU Hexagon</div>
+              <div class="lbl">Hardware Engine</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature Jump Rail -->
+        <div class="quick-rail-title">DIRECT FEATURE JUMP:</div>
+        <div class="rail-grid">
+          <button class="rail-btn active" data-rail="home" onclick="manualJump('home')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+            </svg>
+            1. Living Core
+          </button>
+          <button class="rail-btn" data-rail="pulse" onclick="manualJump('pulse')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+              <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+            </svg>
+            2. Priority Pulse
+          </button>
+          <button class="rail-btn" data-rail="memory" onclick="manualJump('memory')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" x2="16.65" y1="21" y2="16.65" />
+            </svg>
+            3. Shared Memory
+          </button>
+          <button class="rail-btn" data-rail="snap" onclick="manualJump('snap')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+              <circle cx="12" cy="13" r="3" />
+            </svg>
+            4. Snap &amp; Ask
+          </button>
+          <button class="rail-btn" data-rail="dump" onclick="manualJump('dump')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+              <line x1="12" x2="12" y1="19" y2="22" />
+            </svg>
+            5. Brain Dump
+          </button>
+          <button class="rail-btn" data-rail="ask" onclick="manualJump('ask')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path
+                d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+            </svg>
+            6. Ask My Phone
+          </button>
+          <button class="rail-btn" data-rail="morning" onclick="manualJump('morning')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="4" />
+              <path d="M12 2v2" />
+              <path d="M12 20v2" />
+              <path d="m4.93 4.93 1.41 1.41" />
+              <path d="m17.66 17.66 1.41 1.41" />
+              <path d="M2 12h2" />
+              <path d="M20 12h2" />
+            </svg>
+            7. Day Planner
+          </button>
+          <button class="rail-btn" data-rail="device" onclick="manualJump('device')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="18" height="12" x="3" y="4" rx="2" />
+              <line x1="2" x2="22" y1="20" y2="20" />
+            </svg>
+            8. Laptop Link
+          </button>
+          <button class="rail-btn" data-rail="inside" onclick="manualJump('inside')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect width="16" height="16" x="4" y="4" rx="2" />
+              <rect width="6" height="6" x="9" y="9" rx="1" />
+            </svg>
+            9. 4 Models Specs
+          </button>
+          <button class="rail-btn" data-rail="privacy" onclick="manualJump('privacy')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+            </svg>
+            10. Privacy Proof
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================================
+       SMARTPHONE FRAME (iQOO FLAGSHIP HARDWARE)
+       ======================================================================== -->
+    <div class="phone-outer">
+      <div class="phone">
+        <!-- Dynamic Island Notch -->
+        <div class="phone-island">
+          <div class="sensor"></div>
+          <div class="lens"></div>
+        </div>
+
+        <div class="screen">
+          <!-- Toast Notification Wrap -->
+          <div class="toast-wrap">
+            <div class="toast" id="toastBox">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5">
+                <polyline points="20 6 9 17 4 12" />
+              </svg>
+              <span id="toastMsg">Processed locally on device</span>
+            </div>
+          </div>
+
+          <!-- Phone Status Bar -->
+          <div class="statusbar">
+            <div class="status-left">09:41</div>
+            <div class="status-right">
+              <span class="offline-pill">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                OFFLINE
+              </span>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M5 12.55a11 11 0 0 1 14.08 0" />
+                <path d="M1.42 9a16 16 0 0 1 21.16 0" />
+                <path d="M8.53 16.11a6 6 0 0 1 6.95 0" />
+                <line x1="12" y1="20" x2="12.01" y2="20" />
+              </svg>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="18" height="10" x="2" y="7" rx="2" ry="2" />
+                <line x1="22" x2="22" y1="11" y2="13" />
+              </svg>
+            </div>
+          </div>
+
+          <!-- ====================================================================
+             VIEWPORT VIEWS (ALL 100% PURE PREMIUM WHITE THEME)
+             ==================================================================== -->
+          <div class="view-port">
+
+            <!-- VIEW 1: HOME / LIVING CORE -->
+            <div class="view active" id="view-home">
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <div>
+                  <h1 class="h-page" style="margin-bottom:2px;">
+                    ORBIT Core
+                    <span
+                      style="display:inline-flex; padding:3px 8px; background:rgba(37,99,235,0.08); border-radius:6px; font-size:11px; font-family:var(--font-mono); color:var(--blue-brand); font-weight:600;">iQOO
+                      NPU</span>
+                  </h1>
+                  <p class="page-sub">Private On-Device Assistant</p>
+                </div>
+
+              </div>
+
+              <!-- Lively Sphere -->
+              <div class="orb-container" id="mainOrb" onclick="cycleOrbTask()">
+                <div class="orb-halo">
+                  <div class="orb-pulse-ring"></div>
+                  <div class="orb-pulse-ring"></div>
+                  <div class="orb-pulse-ring"></div>
+
+                  <div class="orb-core" id="orbCore"></div>
+                </div>
+
+                <!-- Interactive Telemetry Pill -->
+                <div class="orb-status-pill" id="orbStatusPill">
+                  <span class="beacon-dot" id="orbBeacon"></span>
+                  <span id="orbStatusText">Reflex Layer: Guarding Privacy (0 KB Out)</span>
+                </div>
+              </div>
+
+              <!-- Quick Action Grid -->
+              <div class="section-title">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                </svg>
+                REFLEX &amp; REASONING ACTIONS
+              </div>
+              <div class="qa-grid">
+                <div class="qa-card" onclick="showView('pulse')">
+                  <div class="qa-icon-wrap tint-amber">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="qa-title">Priority Pulse</div>
+                    <div class="qa-sub">Under 100ms triage</div>
+                  </div>
+                </div>
+
+                <div class="qa-card" onclick="showView('memory')">
+                  <div class="qa-icon-wrap tint-purple">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <circle cx="11" cy="11" r="8" />
+                      <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="qa-title">Remember</div>
+                    <div class="qa-sub">Semantic vector store</div>
+                  </div>
+                </div>
+
+                <div class="qa-card" onclick="showView('snap')">
+                  <div class="qa-icon-wrap tint-blue">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                      <circle cx="12" cy="13" r="3" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="qa-title">Snap &amp; Ask</div>
+                    <div class="qa-sub">Camera OCR + labels</div>
+                  </div>
+                </div>
+
+                <div class="qa-card" onclick="showView('dump')">
+                  <div class="qa-icon-wrap tint-emerald">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                      <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                      <line x1="12" x2="12" y1="19" y2="22" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="qa-title">Brain Dump</div>
+                    <div class="qa-sub">Voice to task in 3.2s</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Summary Cards -->
+              <div class="card clickable" onclick="showView('morning')">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="qa-icon-wrap tint-amber" style="width:32px; height:32px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="4" />
+                        <path d="M12 2v2" />
+                        <path d="M12 20v2" />
+                        <path d="m4.93 4.93 1.41 1.41" />
+                        <path d="m17.66 17.66 1.41 1.41" />
+                        <path d="M2 12h2" />
+                        <path d="M20 12h2" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div style="font-size:13px; font-weight:600;">Morning Brief Ready</div>
+                      <div style="font-size:11px; color:var(--ink-dim);">1 Schedule Conflict · 2 Urgent Items</div>
+                    </div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)"
+                    stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              </div>
+
+              <div class="card clickable" onclick="showView('device')">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="qa-icon-wrap tint-blue" style="width:32px; height:32px;">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect width="18" height="12" x="3" y="4" rx="2" />
+                        <line x1="2" x2="22" y1="20" y2="20" />
+                      </svg>
+                    </div>
+                    <div>
+                      <div style="font-size:13px; font-weight:600;">Laptop Link (Office Kit)</div>
+                      <div style="font-size:11px; color:var(--ink-dim);">Laptop borrowing phone NPU for drafting</div>
+                    </div>
+                  </div>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)"
+                    stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 2: PRIORITY PULSE (NOTIFICATION TRIAGE) -->
+            <div class="view" id="view-pulse">
+              <h1 class="h-page">
+                Priority Pulse
+                <span class="qa-icon-wrap tint-amber" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">On-device reflex tier classifies every notification in under 100ms.</p>
+
+              <!-- Urgent Flight Gate Change -->
+              <div class="notif urgent" id="flightNotif">
+                <div class="notif-head">
+                  <div class="notif-app" style="color:var(--rose-danger);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z" />
+                    </svg>
+                    Air India · Urgent Gate Alert
+                  </div>
+                  <div class="notif-time">Just Now · 82ms</div>
+                </div>
+                <div class="notif-title">Gate Change: AI 802 moved to Gate A04</div>
+                <div class="notif-body">Boarding commences in 25 minutes. Terminal 3 departure.</div>
+                <div class="notif-actions">
+                  <button class="btn btn-ghost" style="padding:6px 12px; font-size:11.5px;"
+                    onclick="toast('Showing ticket boarding pass')">View Details</button>
+                  <button class="btn btn-primary" style="padding:6px 12px; font-size:11.5px;"
+                    onclick="toast('Navigating to Gate A04 via indoor maps')">Navigate</button>
+                </div>
+              </div>
+
+              <!-- Important Payment Alert -->
+              <div class="notif important">
+                <div class="notif-head">
+                  <div class="notif-app" style="color:var(--amber-warning);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect width="20" height="14" x="2" y="5" rx="2" />
+                      <line x1="2" x2="22" y1="10" y2="10" />
+                    </svg>
+                    HDFC Bank · Payment Due
+                  </div>
+                  <div class="notif-time">12m ago</div>
+                </div>
+                <div class="notif-title">Credit Card Bill Statement Generated</div>
+                <div class="notif-body">₹24,850 due on Sept 18. Auto-pay scheduled.</div>
+              </div>
+
+              <!-- Normal Notification -->
+              <div class="notif normal">
+                <div class="notif-head">
+                  <div class="notif-app" style="color:var(--blue-brand);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                    Slack · Team Sync
+                  </div>
+                  <div class="notif-time">34m ago</div>
+                </div>
+                <div class="notif-title">Rahul: Updated the hackathon architecture slides</div>
+                <div class="notif-body">Take a look before the afternoon review.</div>
+              </div>
+
+              <!-- Silenced Spam Box -->
+              <div class="silenced-box">
+                <div style="display:flex; align-items:center; gap:8px;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <line x1="4.93" y1="4.93" x2="19.07" y2="19.07" />
+                  </svg>
+                  <span>18 Promotional alerts silenced locally</span>
+                </div>
+                <span class="silenced-badge">Zero Noise</span>
+              </div>
+
+              <div
+                style="margin-top:20px; display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; color:var(--ink-dim);">
+                <span>Reflex Execution: 82 ms</span>
+                <span>Cloud Egress: 0 Bytes</span>
+              </div>
+            </div>
+
+            <!-- VIEW 3: MEMORY (SHARED ON-DEVICE VECTOR STORE) -->
+            <div class="view" id="view-memory">
+              <h1 class="h-page">
+                Shared Memory
+                <span class="qa-icon-wrap tint-purple" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">One on-device vector store. Universal Sentence Encoder embeddings in &lt;200ms.</p>
+
+              <div class="search-bar">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2">
+                  <circle cx="11" cy="11" r="8" />
+                  <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                </svg>
+                <input type="text" value="flight ticket gate screenshot"
+                  placeholder="Search meaning across screenshots, notes, audio..."
+                  oninput="toast('Cosine similarity scan across 1,248 vectors in 41ms')">
+              </div>
+
+              <div class="section-title">RETRIEVED LOCAL FACTS (TOP MATCHES)</div>
+
+              <div class="mem-node" onclick="toast('Opening Screenshot source: Flight AI 802')">
+                <div class="mem-icon-badge tint-blue">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:600;">Screenshot_20260912_Ticket.png</div>
+                  <div style="font-size:11px; color:var(--ink-dim);">Air India 802 · PNR 8X49L · Gate A04 · 07:40 AM
+                  </div>
+                </div>
+                <span
+                  style="font-family:var(--font-mono); font-size:11px; color:var(--emerald-green); font-weight:600;">98%
+                  Match</span>
+              </div>
+
+              <div class="mem-node" onclick="toast('Opening travel notes in local database')">
+                <div class="mem-icon-badge tint-purple">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                    <polyline points="14 2 14 8 20 8" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:600;">Travel Notes: Bangalore Trip</div>
+                  <div style="font-size:11px; color:var(--ink-dim);">Hotel confirmation at Indiranagar, cab pickup
+                    5:30am</div>
+                </div>
+                <span
+                  style="font-family:var(--font-mono); font-size:11px; color:var(--emerald-green); font-weight:600;">91%
+                  Match</span>
+              </div>
+
+              <div class="mem-node" onclick="toast('Playing 14s local voice note snippet')">
+                <div class="mem-icon-badge tint-emerald">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13px; font-weight:600;">Audio Note: Hackathon Pitch Idea</div>
+                  <div style="font-size:11px; color:var(--ink-dim);">"Remind me to highlight the zero internet
+                    permission..."</div>
+                </div>
+                <span
+                  style="font-family:var(--font-mono); font-size:11px; color:var(--emerald-green); font-weight:600;">86%
+                  Match</span>
+              </div>
+
+              <div class="card"
+                style="margin-top:14px; background:var(--surface-subtle); display:flex; align-items:center; gap:10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--emerald-green)"
+                  stroke-width="2.5">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <div style="font-size:11.5px; color:var(--ink-secondary);">
+                  1,248 vectors stored locally in Room DB. Zero cloud sync needed.
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 4: SNAP & ASK (CAMERA OCR + REGION HIGHLIGHTING) -->
+            <div class="view" id="view-snap">
+              <h1 class="h-page">
+                Snap &amp; Ask
+                <span class="qa-icon-wrap tint-blue" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                    <circle cx="12" cy="13" r="3" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Point camera, ask question. ML Kit OCR + Gemma highlights answer region.</p>
+
+              <div class="cam-frame">
+                <div class="cam-overlay"></div>
+                <div class="cam-tag">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="10 8 16 12 10 16 10 8" />
+                  </svg>
+                  CameraX · Snapdragon NPU Stream
+                </div>
+
+                <!-- OCR Target Box -->
+                <div class="cam-target-box">
+                  <div class="scan-line"></div>
+                  <div
+                    style="text-align:center; color:#ffffff; font-family:var(--font-mono); font-size:11px; text-shadow:0 1px 4px rgba(0,0,0,0.8);">
+                    BOARDING PASS AI 802<br>
+                    <b style="color:var(--cyan-core); font-size:13px;">GATE: A04 · SEAT: 12F</b>
+                  </div>
+                </div>
+
+                <div style="display:flex; justify-content:space-between; align-items:center; z-index:5;">
+                  <span class="cam-tag" style="background:rgba(16,185,129,0.8);">OCR Latency: 16ms</span>
+                  <span class="cam-tag">ML Kit v2</span>
+                </div>
+              </div>
+
+              <!-- OCR Answer Card -->
+              <div class="card">
+                <div style="display:flex; align-items:center; gap:8px; margin-bottom:6px;">
+                  <div class="qa-icon-wrap tint-emerald" style="width:24px; height:24px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div style="font-size:12.5px; font-weight:700; color:var(--ink-primary);">ANSWER EXTRACTED</div>
+                </div>
+                <div style="font-size:13px; color:var(--ink-secondary); line-height:1.45;">
+                  Your flight departs from <b>Gate A04</b>. Boarding group 2. Seat 12F.
+                </div>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                  <button class="btn btn-primary" style="padding:6px 12px; font-size:11.5px;"
+                    onclick="toast('Saved flight details to morning briefing')">Save to Brief</button>
+                  <button class="btn btn-ghost" style="padding:6px 12px; font-size:11.5px;"
+                    onclick="toast('Source region bounded in camera viewfinder')">Highlight Region</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 5: BRAIN DUMP (VOICE TO STRUCTURED TASKS) -->
+            <div class="view" id="view-dump">
+              <h1 class="h-page">
+                Brain Dump
+                <span class="qa-icon-wrap tint-emerald" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Speak freely for 30s. Vosk/Whisper + Gemma extract calendar events and to-dos.</p>
+
+              <!-- Audio Wave Visualizer -->
+              <div class="card" style="text-align:center; padding:16px;">
+                <div style="font-size:12px; font-weight:600; color:var(--blue-brand);">30-SECOND SPEECH TRANSCRIPT:
+                </div>
+                <div style="font-style:italic; font-size:12.5px; color:var(--ink-secondary); margin:8px 0;">
+                  "Remind me to meet the team tomorrow at 10 AM, submit the hackathon assignment by 8 PM, and call Rahul
+                  tonight at 8:30."
+                </div>
+
+                <div class="audio-visualizer">
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                  <div class="audio-bar"></div>
+                </div>
+
+                <span style="font-family:var(--font-mono); font-size:11px; color:var(--ink-dim);">
+                  Vosk Small English · On-Device Audio Conformer
+                </span>
+              </div>
+
+              <div class="section-title">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
+                3 STRUCTURED ACTIONS EXTRACTED
+              </div>
+
+              <div class="action-card" id="dumpA1">
+                <div class="action-num-badge">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                    <line x1="16" x2="16" y1="2" y2="6" />
+                    <line x1="8" x2="8" y1="2" y2="6" />
+                    <line x1="3" x2="21" y1="10" y2="10" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="action-title">Team Project Review Meeting</div>
+                  <div class="action-time">Tomorrow · 10:00 AM (Calendar Event)</div>
+                </div>
+                <span class="offline-pill">Ready</span>
+              </div>
+
+              <div class="action-card" id="dumpA2">
+                <div class="action-num-badge" style="color:var(--rose-danger);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                    <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="action-title">Submit Hackathon Assignment</div>
+                  <div class="action-time">Tomorrow · 08:00 PM (High Priority To-Do)</div>
+                </div>
+                <span class="offline-pill">Ready</span>
+              </div>
+
+              <div class="action-card" id="dumpA3">
+                <div class="action-num-badge" style="color:var(--emerald-green);">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div class="action-title">Call Teammate Rahul</div>
+                  <div class="action-time">Today · 08:30 PM (Quick Task)</div>
+                </div>
+                <span class="offline-pill">Ready</span>
+              </div>
+
+              <button class="btn btn-primary" style="width:100%; margin-top:10px;"
+                onclick="toast('All 3 actions saved directly to local Calendar &amp; Reminders')">
+                Save All 3 Actions to Calendar
+              </button>
+            </div>
+
+            <!-- VIEW 6: ASK MY PHONE (CONVERSATIONAL CITATIONS) -->
+            <div class="view" id="view-ask">
+              <h1 class="h-page">
+                Ask My Phone
+                <span class="qa-icon-wrap tint-purple" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                      d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Ask anything about what the app has seen. Every answer carries a citation.</p>
+
+              <div class="chat-bubble chat-user">
+                When is my flight tomorrow, and did the gate change?
+              </div>
+
+              <div class="chat-bubble chat-orbit">
+                Your flight <b>Air India 802</b> departs at <b>07:40 AM</b> tomorrow. The gate was updated to <b>Gate
+                  A04</b> (Terminal 3).
+
+                <div style="margin-top:8px;">
+                  <div class="source-chip" onclick="toast('Opening Screenshot Citation: Ticket confirmation')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path
+                        d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z" />
+                      <circle cx="12" cy="13" r="3" />
+                    </svg>
+                    Ticket Screenshot (98%)
+                  </div>
+                  <div class="source-chip" onclick="toast('Opening Air India notification citation')">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                    Gate Notification (Just Now)
+                  </div>
+                </div>
+              </div>
+
+              <div class="search-bar" style="position:absolute; bottom:82px; left:18px; right:18px; margin-bottom:0;">
+                <input type="text" placeholder="Ask anything about notifications, notes..."
+                  onkeydown="if(event.key==='Enter') toast('Streaming first token in 1.1s via Gemma 3')">
+                <button class="btn btn-primary" style="padding:6px 10px; border-radius:8px;"
+                  onclick="toast('Streaming first token in 1.1s via Gemma 3')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                    <line x1="22" y1="2" x2="11" y2="13" />
+                    <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <!-- VIEW 7: MORNING BRIEF & PLAN MY DAY (SCHEDULE & TODO OPTIMIZER) -->
+            <div class="view" id="view-morning">
+              <h1 class="h-page">
+                Morning Brief
+                <span class="qa-icon-wrap tint-amber" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="4" />
+                    <path d="M12 2v2" />
+                    <path d="M12 20v2" />
+                    <path d="m4.93 4.93 1.41 1.41" />
+                    <path d="m17.66 17.66 1.41 1.41" />
+                    <path d="M2 12h2" />
+                    <path d="M20 12h2" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Ranked card: today's schedule, automatic conflict detection, open tasks.</p>
+
+              <!-- Schedule Conflict Warning Box -->
+              <div class="conflict-badge" id="conflictBanner">
+                <svg id="conflictIcon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                  stroke-width="2.5">
+                  <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                  <line x1="12" x2="12" y1="9" y2="13" />
+                  <line x1="12" x2="12.01" y1="17" y2="17" />
+                </svg>
+                <span id="conflictText">Schedule Conflict: Team Meeting collides with Flight Prep at 10:00 AM</span>
+              </div>
+
+              <!-- Unplanned Overview Card -->
+              <div class="card" id="briefSummaryCard">
+                <div style="font-size:13px; font-weight:600; margin-bottom:4px;">Pending Commitments Detected:</div>
+                <ul style="margin:0; padding-left:18px; font-size:12px; color:var(--ink-secondary); line-height:1.6;">
+                  <li style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--rose-danger)"
+                      stroke-width="2.5">
+                      <path
+                        d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                    </svg>
+                    <span><b>Submit Hackathon Assignment</b> due tonight by 8:00 PM</span>
+                  </li>
+                  <li style="display:flex; align-items:center; gap:6px; margin-bottom:4px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--blue-brand)"
+                      stroke-width="2.5">
+                      <path
+                        d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.3c.4-.2.6-.6.5-1.1z" />
+                    </svg>
+                    <span><b>Flight AI 802</b> boarding at 07:40 AM</span>
+                  </li>
+                  <li style="display:flex; align-items:center; gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--amber-warning)"
+                      stroke-width="2.5">
+                      <path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z" />
+                      <line x1="12" x2="12" y1="9" y2="13" />
+                      <line x1="12" x2="12.01" y1="17" y2="17" />
+                    </svg>
+                    <span><b>Team Project Review</b> currently set for 10:00 AM (overlaps flight)</span>
+                  </li>
+                </ul>
+
+                <!-- WORKING PLAN MY DAY BUTTON -->
+                <button class="btn btn-primary" id="planDayBtn" style="width:100%; margin-top:14px;"
+                  onclick="executePlanMyDay()">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  Plan My Day &amp; Build Schedule
+                </button>
+              </div>
+
+              <!-- REVEALED OPTIMIZED TO-DO LIST & TIME SCHEDULE -->
+              <div class="plan-schedule" id="planScheduleSection">
+                <div class="section-title">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                  OPTIMIZED TO-DO CHECKLIST (INTERACTIVE)
+                </div>
+
+                <div class="todo-item" onclick="toggleTodo(this)">
+                  <div class="todo-checkbox">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="todo-label">Submit Hackathon Assignment</div>
+                  <span class="todo-tag" style="color:var(--rose-danger);">High Priority</span>
+                </div>
+
+                <div class="todo-item" onclick="toggleTodo(this)">
+                  <div class="todo-checkbox">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="todo-label">Review Gate A04 boarding pass</div>
+                  <span class="todo-tag">Flight Prep</span>
+                </div>
+
+                <div class="todo-item" onclick="toggleTodo(this)">
+                  <div class="todo-checkbox">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="todo-label">Attend Rescheduled Team Review</div>
+                  <span class="todo-tag" style="color:var(--emerald-green);">2:30 PM Slot</span>
+                </div>
+
+                <div class="todo-item" onclick="toggleTodo(this)">
+                  <div class="todo-checkbox">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                      <polyline points="20 6 9 17 4 12" />
+                    </svg>
+                  </div>
+                  <div class="todo-label">Call Teammate Rahul re: Demo</div>
+                  <span class="todo-tag">08:30 PM</span>
+                </div>
+
+                <!-- Structured Timeline -->
+                <div class="section-title" style="margin-top:16px;">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                    <line x1="16" x2="16" y1="2" y2="6" />
+                    <line x1="8" x2="8" y1="2" y2="6" />
+                    <line x1="3" x2="21" y1="10" y2="10" />
+                  </svg>
+                  RESOLVED DAILY TIMELINE
+                </div>
+
+                <div class="timeline-slot">
+                  <div class="time-stamp">07:40 AM</div>
+                  <div class="time-content">
+                    <div class="time-title">Flight AI 802 Departure</div>
+                    <div class="time-sub">Terminal 3 · Gate A04</div>
+                  </div>
+                </div>
+
+                <div class="timeline-slot">
+                  <div class="time-stamp">10:30 AM</div>
+                  <div class="time-content">
+                    <div class="time-title">Deep Work Focus Block</div>
+                    <div class="time-sub">Protected time for assignment coding</div>
+                  </div>
+                </div>
+
+                <div class="timeline-slot resolved-slot">
+                  <div class="time-stamp" style="color:var(--emerald-green);">02:30 PM</div>
+                  <div class="time-content">
+                    <div class="time-title" style="color:var(--emerald-green);">Rescheduled Team Review</div>
+                    <div class="time-sub">Automatically shifted to resolve morning collision</div>
+                  </div>
+                </div>
+
+                <div class="timeline-slot">
+                  <div class="time-stamp">08:00 PM</div>
+                  <div class="time-content">
+                    <div class="time-title">Assignment Submission Deadline</div>
+                    <div class="time-sub">Final PDF &amp; demo link upload</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 8: LAPTOP LINK (OFFICE KIT) -->
+            <div class="view" id="view-device">
+              <h1 class="h-page">
+                Laptop Link
+                <span class="qa-icon-wrap tint-blue" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="18" height="12" x="3" y="4" rx="2" />
+                    <line x1="2" x2="22" y1="20" y2="20" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Office Kit clipboard &amp; file transfer let the laptop borrow the phone's NPU.</p>
+
+              <div class="flow-diagram">
+                <div class="flow-step">
+                  <div class="qa-icon-wrap tint-blue" style="width:30px; height:30px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect width="14" height="20" x="5" y="2" rx="2" ry="2" />
+                      <line x1="12" x2="12.01" y1="18" y2="18" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;">iQOO Flagship Phone</div>
+                    <div style="color:var(--ink-dim); font-size:11px;">Captures screenshots &amp; notifications</div>
+                  </div>
+                </div>
+
+                <div class="flow-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <polyline points="19 12 12 19 5 12" />
+                  </svg>
+                </div>
+
+                <div class="flow-step" style="border-color:var(--blue-brand); background:rgba(37,99,235,0.03);">
+                  <div class="qa-icon-wrap tint-purple" style="width:30px; height:30px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;">Snapdragon NPU Processing</div>
+                    <div style="color:var(--blue-brand); font-size:11px;">Gemma 3 local drafting (34 tok/s)</div>
+                  </div>
+                </div>
+
+                <div class="flow-arrow">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="12" y1="5" x2="12" y2="19" />
+                    <polyline points="19 12 12 19 5 12" />
+                  </svg>
+                </div>
+
+                <div class="flow-step">
+                  <div class="qa-icon-wrap tint-emerald" style="width:30px; height:30px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect width="18" height="12" x="3" y="4" rx="2" />
+                      <line x1="2" x2="22" y1="20" y2="20" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-weight:600;">Laptop (Office Kit Sync)</div>
+                    <div style="color:var(--ink-dim); font-size:11px;">Instant paste via encrypted Wi-Fi/P2P</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Prepared Summary Card -->
+              <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                  <span class="offline-pill" style="color:var(--blue-brand); background:rgba(37,99,235,0.08);">
+                    SUMMARY READY FOR LAPTOP
+                  </span>
+                  <span style="font-family:var(--font-mono); font-size:11px; color:var(--ink-faint);">0 Bytes
+                    Cloud</span>
+                </div>
+                <div style="font-size:12.5px; color:var(--ink-secondary); line-height:1.45;">
+                  "Air India flight AI 802 to Bangalore scheduled at 07:40 AM from Gate A04. Hackathon presentation deck
+                  updated."
+                </div>
+                <button class="btn btn-primary" style="width:100%; margin-top:10px;"
+                  onclick="toast('Summary copied to laptop clipboard via Office Kit')">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="14" height="14" x="8" y="8" rx="2" ry="2" />
+                    <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                  </svg>
+                  Copy to Laptop Clipboard
+                </button>
+              </div>
+            </div>
+
+            <!-- VIEW 9: INSIDE ORBIT (4 MODELS TECHNICAL ARCHITECTURE & SPECS) -->
+            <div class="view" id="view-inside">
+              <h1 class="h-page">
+                Inside ORBIT
+                <span class="qa-icon-wrap tint-purple" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect width="16" height="16" x="4" y="4" rx="2" />
+                    <rect width="6" height="6" x="9" y="9" rx="1" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Tap any engine below to inspect on-device model specifications &amp; benchmarks.</p>
+
+              <!-- Engine 1: Gemma 3 Local LLM -->
+              <div class="engine-card" onclick="toggleEngineSpec('specGemma')">
+                <div class="engine-icon-wrap tint-purple">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:700;">Local LLM (Gemma 3)</div>
+                  <div style="font-size:11.5px; color:var(--ink-dim);">Reasoning, drafting, task extraction</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <!-- Gemma Spec Drawer -->
+              <div class="spec-drawer" id="specGemma">
+                <div class="spec-row"><span class="spec-k">Model</span><span class="spec-v">Gemma 3 1B (INT4)</span>
+                </div>
+                <div class="spec-row"><span class="spec-k">Runtime API</span><span class="spec-v">MediaPipe LLM
+                    Inference</span></div>
+                <div class="spec-row"><span class="spec-k">Footprint</span><span class="spec-v">~530 MB on-device</span>
+                </div>
+                <div class="spec-row"><span class="spec-k">Tokens / Sec</span><span class="spec-v">34 tok/s (Snapdragon
+                    NPU)</span></div>
+                <div class="spec-row"><span class="spec-k">Time to 1st Token</span><span class="spec-v">~1.0
+                    second</span></div>
+                <button class="btn btn-ghost benchmark-btn"
+                  onclick="toast('Gemma 3 Benchmark: 34.2 tok/s on Hexagon NPU')">
+                  Run Inference Benchmark
+                </button>
+              </div>
+
+              <!-- Engine 2: ML Kit OCR -->
+              <div class="engine-card" onclick="toggleEngineSpec('specOcr')">
+                <div class="engine-icon-wrap tint-blue">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:700;">OCR Engine (ML Kit v2)</div>
+                  <div style="font-size:11.5px; color:var(--ink-dim);">On-device text recognition</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <!-- OCR Spec Drawer -->
+              <div class="spec-drawer" id="specOcr">
+                <div class="spec-row"><span class="spec-k">Framework</span><span class="spec-v">Google ML Kit Text
+                    v2</span></div>
+                <div class="spec-row"><span class="spec-k">Footprint</span><span class="spec-v">~4.2 MB Bundled</span>
+                </div>
+                <div class="spec-row"><span class="spec-k">Latency</span><span class="spec-v">16 - 28 ms per
+                    frame</span></div>
+                <div class="spec-row"><span class="spec-k">Languages</span><span class="spec-v">Latin, Devanagari,
+                    CJK</span></div>
+                <button class="btn btn-ghost benchmark-btn"
+                  onclick="toast('ML Kit OCR Benchmark: 18ms frame parse latency')">
+                  Run Frame Scan Test
+                </button>
+              </div>
+
+              <!-- Engine 3: Vision Labeling -->
+              <div class="engine-card" onclick="toggleEngineSpec('specVision')">
+                <div class="engine-icon-wrap tint-amber">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M12 2a14.5 14.5 0 0 0 0 20 14.5 14.5 0 0 0 0-20" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:700;">Vision Engine (Image Labeling)</div>
+                  <div style="font-size:11.5px; color:var(--ink-dim);">Object concepts &amp; UI region segmentation
+                  </div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <!-- Vision Spec Drawer -->
+              <div class="spec-drawer" id="specVision">
+                <div class="spec-row"><span class="spec-k">Model</span><span class="spec-v">ML Kit Image Labeling
+                    (TFLite)</span></div>
+                <div class="spec-row"><span class="spec-k">Footprint</span><span class="spec-v">Bundled with app</span>
+                </div>
+                <div class="spec-row"><span class="spec-k">Target Delegate</span><span class="spec-v">QNN / GPU
+                    Acceleration</span></div>
+                <div class="spec-row"><span class="spec-k">Inference</span><span class="spec-v">22 ms</span></div>
+                <button class="btn btn-ghost benchmark-btn"
+                  onclick="toast('Vision Benchmark: 22ms per bounding box pass')">
+                  Test Region Detection
+                </button>
+              </div>
+
+              <!-- Engine 4: Universal Sentence Encoder Embedder -->
+              <div class="engine-card" onclick="toggleEngineSpec('specEmbed')">
+                <div class="engine-icon-wrap tint-emerald">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8" />
+                    <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:700;">Vector Embedder &amp; DB</div>
+                  <div style="font-size:11.5px; color:var(--ink-dim);">Universal Sentence Encoder + Room DB</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <!-- Embedder Spec Drawer -->
+              <div class="spec-drawer" id="specEmbed">
+                <div class="spec-row"><span class="spec-k">Embedder</span><span class="spec-v">Universal Sentence
+                    Encoder</span></div>
+                <div class="spec-row"><span class="spec-k">Embedding Size</span><span class="spec-v">~17 MB (MediaPipe
+                    Text)</span></div>
+                <div class="spec-row"><span class="spec-k">Store</span><span class="spec-v">Room Vector DB (Cosine
+                    similarity)</span></div>
+                <div class="spec-row"><span class="spec-k">Scan Speed</span><span class="spec-v">&lt; 50 ms per 2,000
+                    vectors</span></div>
+                <button class="btn btn-ghost benchmark-btn"
+                  onclick="toast('Vector Scan Benchmark: 41ms across 1,248 vectors')">
+                  Benchmark Cosine Search
+                </button>
+              </div>
+
+              <!-- Engine 5: Speech Engine -->
+              <div class="engine-card" onclick="toggleEngineSpec('specSpeech')">
+                <div class="engine-icon-wrap tint-rose">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z" />
+                    <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                    <line x1="12" x2="12" y1="19" y2="22" />
+                  </svg>
+                </div>
+                <div style="flex:1;">
+                  <div style="font-size:13.5px; font-weight:700;">Speech Engine (Vosk / Whisper)</div>
+                  <div style="font-size:11.5px; color:var(--ink-dim);">On-device speech-to-text transcription</div>
+                </div>
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--ink-faint)" stroke-width="2">
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </div>
+              <!-- Speech Spec Drawer -->
+              <div class="spec-drawer" id="specSpeech">
+                <div class="spec-row"><span class="spec-k">Model</span><span class="spec-v">Vosk Small English /
+                    Conformer</span></div>
+                <div class="spec-row"><span class="spec-k">Footprint</span><span class="spec-v">~40 MB on-device</span>
+                </div>
+                <div class="spec-row"><span class="spec-k">Task Extraction</span><span class="spec-v">3 - 4 seconds
+                    voice to tasks</span></div>
+                <button class="btn btn-ghost benchmark-btn"
+                  onclick="toast('Speech Engine Benchmark: 62ms chunk stream latency')">
+                  Test Audio Stream
+                </button>
+              </div>
+
+              <div class="card" style="background:var(--surface-subtle); margin-top:14px;">
+                <div
+                  style="display:flex; justify-content:space-between; font-family:var(--font-mono); font-size:11px; font-weight:600;">
+                  <span>TOTAL MODEL FOOTPRINT</span>
+                  <span style="color:var(--emerald-green);">&lt; 600 MB (Bundled at Install)</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- VIEW 10: PRIVACY CENTER (ZERO INTERNET PERMISSION) -->
+            <div class="view" id="view-privacy">
+              <h1 class="h-page">
+                Privacy Vault
+                <span class="qa-icon-wrap tint-emerald" style="width:28px; height:28px;">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                  </svg>
+                </span>
+              </h1>
+              <p class="page-sub">Private by architecture. Shipped with ZERO android.permission.INTERNET.</p>
+
+              <div class="card" style="border-color:rgba(16,185,129,0.3); background:rgba(16,185,129,0.03);">
+                <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                  <div class="qa-icon-wrap tint-emerald" style="width:34px; height:34px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                      stroke-width="2.5">
+                      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <div style="font-size:13.5px; font-weight:700; color:#065f46;">Zero Network Egress Guarantee</div>
+                    <div style="font-size:11.5px; color:var(--ink-dim);">Verified in airplane mode on stage</div>
+                  </div>
+                </div>
+                <div style="font-size:12px; color:var(--ink-secondary); line-height:1.5;">
+                  Cloud assistants cannot read notifications, screenshots or private files. ORBIT can because 100% of
+                  perception and reasoning execute locally on the Snapdragon NPU.
+                </div>
+              </div>
+
+              <div class="section-title">MANIFEST PERMISSIONS AUDIT</div>
+              <div class="card" style="padding:10px 14px;">
+                <div class="spec-row">
+                  <span class="spec-k">android.permission.INTERNET</span>
+                  <span class="offline-pill" style="background:rgba(244,63,94,0.1); color:var(--rose-danger);">NOT
+                    REQUESTED</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-k">Qualcomm QNN / Hexagon Delegate</span>
+                  <span class="offline-pill">HARDWARE ENABLED</span>
+                </div>
+                <div class="spec-row">
+                  <span class="spec-k">On-Device AES-256 Vector Vault</span>
+                  <span class="offline-pill">ENCRYPTED</span>
+                </div>
+              </div>
+
+              <button class="btn btn-primary" style="width:100%; margin-top:10px;"
+                onclick="toast('Airplane mode audit passed: 0 outbound packets detected')">
+                Run Hardware Sandbox Audit
+              </button>
+            </div>
+
+          </div><!-- /view-port -->
+
+          <!-- Bottom Tab Bar -->
+          <div class="tabbar">
+            <button class="tab active" data-tab="home" onclick="showView('home')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+              </svg>
+              Core
+            </button>
+            <button class="tab" data-tab="pulse" onclick="showView('pulse')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+              </svg>
+              Pulse
+            </button>
+            <button class="tab" data-tab="memory" onclick="showView('memory')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8" />
+                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+              </svg>
+              Memory
+            </button>
+            <button class="tab" data-tab="morning" onclick="showView('morning')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="4" />
+                <path d="M12 2v2" />
+                <path d="M12 20v2" />
+                <path d="m4.93 4.93 1.41 1.41" />
+                <path d="m17.66 17.66 1.41 1.41" />
+                <path d="M2 12h2" />
+                <path d="M20 12h2" />
+              </svg>
+              Brief
+            </button>
+            <button class="tab" data-tab="inside" onclick="showView('inside')">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect width="16" height="16" x="4" y="4" rx="2" />
+                <rect width="6" height="6" x="9" y="9" rx="1" />
+              </svg>
+              Models
+            </button>
+          </div>
+
+        </div><!-- /screen -->
+      </div><!-- /phone -->
+    </div><!-- /phone-outer -->
+
+  </div><!-- /stage -->
+
+  <script>
+    /* ==========================================================================
+       VIEW NAVIGATION & ROUTING
+       ========================================================================== */
+    function showView(viewId) {
+      const views = document.querySelectorAll('.view');
+      views.forEach(v => v.classList.remove('active'));
+
+      const target = document.getElementById('view-' + viewId);
+      if (target) {
+        target.classList.add('active');
+        target.scrollTop = 0;
+      }
+
+      // Update tabs
+      const tabs = document.querySelectorAll('.tab');
+      tabs.forEach(t => {
+        if (t.getAttribute('data-tab') === viewId) {
+          t.classList.add('active');
+        } else {
+          t.classList.remove('active');
+        }
+      });
+
+      // Update companion direct rail
+      const railBtns = document.querySelectorAll('.rail-btn');
+      railBtns.forEach(rb => {
+        if (rb.getAttribute('data-rail') === viewId) {
+          rb.classList.add('active');
+        } else {
+          rb.classList.remove('active');
+        }
+      });
+    }
+
+    function manualJump(viewId) {
+      if (isTourPlaying) {
+        pauseTour();
+      }
+      showView(viewId);
+      updatePitchContextForView(viewId);
+    }
+
+    /* ==========================================================================
+       TOAST NOTIFICATIONS (NO EMOJIS, CLEAN SVGS)
+       ========================================================================== */
+    let toastTimeout = null;
+    function toast(msg) {
+      const box = document.getElementById('toastBox');
+      const txt = document.getElementById('toastMsg');
+      if (!box || !txt) return;
+
+      txt.textContent = msg;
+      box.classList.add('visible');
+
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        box.classList.remove('visible');
+      }, 2200);
+    }
+
+    /* ==========================================================================
+       LIVELY BLUE SPHERE (ORBIT CORE)
+       ========================================================================== */
+    const orbTasks = [
+      { text: "Reflex Layer: Guarding Privacy (0 KB Out)", color: "#10b981", scale: 1 },
+      { text: "Listening: Vosk Speech Conformer Active", color: "#0ea5e9", scale: 1.08 },
+      { text: "Shared Memory: Indexing Vector Store", color: "#7c3aed", scale: 1.05 },
+      { text: "Reasoning: Gemma 3 Stream (34 tok/s)", color: "#3b82f6", scale: 1.12 }
+    ];
+    let currentOrbIndex = 0;
+
+    function cycleOrbTask() {
+      currentOrbIndex = (currentOrbIndex + 1) % orbTasks.length;
+      const state = orbTasks[currentOrbIndex];
+
+      const statusText = document.getElementById('orbStatusText');
+      const beacon = document.getElementById('orbBeacon');
+      const core = document.getElementById('orbCore');
+
+      if (statusText) statusText.textContent = state.text;
+      if (beacon) {
+        beacon.style.background = state.color;
+        beacon.style.boxShadow = `0 0 10px ${state.color}`;
+      }
+      if (core) {
+        core.style.transform = `scale(${state.scale})`;
+      }
+
+      toast(state.text);
+    }
+
+    /* ==========================================================================
+       INTERACTIVE "PLAN MY DAY" & TO-DO CHECKLIST
+       ========================================================================== */
+    function executePlanMyDay() {
+      const btn = document.getElementById('planDayBtn');
+      const banner = document.getElementById('conflictBanner');
+      const icon = document.getElementById('conflictIcon');
+      const text = document.getElementById('conflictText');
+      const planSection = document.getElementById('planScheduleSection');
+
+      if (!btn) return;
+
+      // Processing state
+      btn.disabled = true;
+      btn.innerHTML = `
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="spin-icon"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    Resolving schedule conflicts on-device...
+  `;
+
+      setTimeout(() => {
+        // Resolve conflict banner
+        if (banner) {
+          banner.classList.add('resolved');
+          banner.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        <span>Conflict Resolved: Team Review rescheduled to 2:30 PM (Flight &amp; Deep Work protected)</span>
+      `;
+        }
+
+        // Show interactive to-do & timeline section
+        if (planSection) {
+          planSection.classList.add('show');
+        }
+
+        btn.disabled = false;
+        btn.innerHTML = `
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      Schedule Synced to Calendar
+    `;
+        btn.classList.remove('btn-primary');
+        btn.classList.add('btn-ghost');
+
+        toast('Day planned! 4 to-dos organized & calendar synced offline');
+      }, 750);
+    }
+
+    function toggleTodo(elem) {
+      elem.classList.toggle('completed');
+      const isDone = elem.classList.contains('completed');
+      toast(isDone ? 'Task marked complete' : 'Task reopened');
+    }
+
+    /* ==========================================================================
+       INSIDE ORBIT — ENGINE SPEC TOGGLE
+       ========================================================================== */
+    function toggleEngineSpec(specId) {
+      const drawer = document.getElementById(specId);
+      if (!drawer) return;
+
+      const isOpen = drawer.classList.contains('open');
+      // Close all open drawers first
+      document.querySelectorAll('.spec-drawer').forEach(d => d.classList.remove('open'));
+
+      if (!isOpen) {
+        drawer.classList.add('open');
+      }
+    }
+
+    /* ==========================================================================
+       JUDGE AUTO-TOUR / PITCH ENGINE ("OG FEATURE")
+       ========================================================================== */
+    const tourSteps = [
+      {
+        view: 'home',
+        stepTitle: 'STEP 1 OF 9 · EXECUTIVE SUMMARY',
+        headline: 'Living ORBIT Core &amp; Reflex Tier',
+        body: 'A private AI assistant running 100% on the phone. Eliminates the cloud trade-off. Reflex tier answers in under 100ms; reasoning runs a local LLM.',
+        latency: '< 100 ms',
+        egress: '0 Bytes',
+        engine: 'Snapdragon NPU',
+        action: () => cycleOrbTask()
+      },
+      {
+        view: 'pulse',
+        stepTitle: 'STEP 2 OF 9 · PROBLEM 01 SOLVED',
+        headline: 'Priority Pulse: Buried Alerts Triaged',
+        body: 'Gate change notifications usually drown under promotional pings. ORBIT classifies notifications locally in 82ms, silencing spam and alerting immediately.',
+        latency: '82 ms',
+        egress: '0 Bytes',
+        engine: 'Rule + ML Kit',
+        action: () => {
+          const el = document.getElementById('flightNotif');
+          if (el) el.classList.add('spotlight-active');
+          setTimeout(() => el && el.classList.remove('spotlight-active'), 2000);
+        }
+      },
+      {
+        view: 'memory',
+        stepTitle: 'STEP 3 OF 9 · ONE SHARED MEMORY',
+        headline: 'Local Vector Store &amp; Embeddings',
+        body: 'Screenshots, camera photos, typed notes and voice notes flow into an on-device SQLite/Room vector database. Cosine search finishes in 41ms.',
+        latency: '41 ms',
+        egress: '0 Bytes',
+        engine: 'USE Embedder',
+        action: () => toast('Cosine search across 1,248 items in 41ms')
+      },
+      {
+        view: 'snap',
+        stepTitle: 'STEP 4 OF 9 · COMPUTER VISION &amp; OCR',
+        headline: 'Snap &amp; Ask: Region-Highlighted Answers',
+        body: 'Point the camera at any document. Google ML Kit v2 extracts text in 16ms, and Gemma local LLM highlights the exact answer region on screen.',
+        latency: '16 ms',
+        egress: '0 Bytes',
+        engine: 'ML Kit v2 + QNN',
+        action: () => toast('Bounding box highlight generated on camera stream')
+      },
+      {
+        view: 'dump',
+        stepTitle: 'STEP 5 OF 9 · 15 TAPS REDUCED TO 1',
+        headline: 'Brain Dump: 30s Voice to Structured Tasks',
+        body: 'Users hate typing tasks. Speak freely for 30s; on-device Vosk Speech + Gemma extract dates, times, and actions directly into calendar entries in 3.2s.',
+        latency: '3.2 s',
+        egress: '0 Bytes',
+        engine: 'Vosk + Gemma 3',
+        action: () => {
+          const card = document.getElementById('dumpA1');
+          if (card) card.classList.add('spotlight-active');
+          setTimeout(() => card && card.classList.remove('spotlight-active'), 2000);
+        }
+      },
+      {
+        view: 'ask',
+        stepTitle: 'STEP 6 OF 9 · TRUSTED PRIVACY',
+        headline: 'Ask My Phone: Verifiable Citations',
+        body: 'Every conversational answer carries a verifiable citation chip to the exact source notification or screenshot. Zero hallucinated ambiguity.',
+        latency: '1.1 s to 1st tok',
+        egress: '0 Bytes',
+        engine: 'Gemma 3 1B',
+        action: () => toast('Flight ticket screenshot cited directly')
+      },
+      {
+        view: 'morning',
+        stepTitle: 'STEP 7 OF 9 · PROACTIVE INTELLIGENCE',
+        headline: 'Morning Brief &amp; Conflict Resolution',
+        body: 'Detects schedule collisions automatically. Tapping Plan My Day reorganizes the daily to-do checklist and protects deep work blocks.',
+        latency: '< 500 ms',
+        egress: '0 Bytes',
+        engine: 'Gemma Planner',
+        action: () => executePlanMyDay()
+      },
+      {
+        view: 'device',
+        stepTitle: 'STEP 8 OF 9 · ECOSYSTEM FIT',
+        headline: 'Laptop Link: Office Kit Clipboard Sync',
+        body: 'The laptop borrows the phone Snapdragon NPU for drafting and summaries. Results paste seamlessly back to the laptop over encrypted local Wi-Fi.',
+        latency: '< 120 ms',
+        egress: '0 Cloud Calls',
+        engine: 'Office Kit P2P',
+        action: () => toast('NPU clipboard synced to laptop')
+      },
+      {
+        view: 'inside',
+        stepTitle: 'STEP 9 OF 9 · 4 MODELS, 1 DEVICE',
+        headline: 'Technical Architecture &amp; Footprint',
+        body: 'Gemma 3 1B INT4 (~530MB), ML Kit OCR (~4MB), USE Embedder (~17MB), Vosk Speech (~40MB). Total footprint &lt;600MB bundled at install.',
+        latency: '34 tok/s',
+        egress: '0 Bytes',
+        engine: 'Qualcomm QNN',
+        action: () => toggleEngineSpec('specGemma')
+      }
+    ];
+
+    let currentTourIndex = 0;
+    let isTourPlaying = false;
+    let tourTimer = null;
+    let tourSpeedMultiplier = 1; // 1x or 2x
+
+    function updatePitchContextForView(viewId) {
+      const matchIndex = tourSteps.findIndex(s => s.view === viewId);
+      if (matchIndex !== -1) {
+        currentTourIndex = matchIndex;
+        renderTourStepUI(tourSteps[matchIndex]);
+      }
+    }
+
+    function renderTourStepUI(step) {
+      document.getElementById('pitchStepKicker').innerHTML = step.stepTitle;
+      document.getElementById('pitchHeadline').innerHTML = step.headline;
+      document.getElementById('pitchBody').innerHTML = step.body;
+      document.getElementById('pitchLatency').textContent = step.latency;
+      document.getElementById('pitchEgress').textContent = step.egress;
+      document.getElementById('pitchEngine').textContent = step.engine;
+
+      // Progress Bar
+      const progressPercent = ((currentTourIndex + 1) / tourSteps.length) * 100;
+      document.getElementById('tourProgressFill').style.width = progressPercent + '%';
+    }
+
+    function playTourStep(index) {
+      if (index >= tourSteps.length) {
+        index = 0; // loop or finish
+      }
+      currentTourIndex = index;
+      const step = tourSteps[index];
+
+      showView(step.view);
+      renderTourStepUI(step);
+
+      if (step.action) {
+        setTimeout(step.action, 500);
+      }
+
+      if (isTourPlaying) {
+        const dwellTime = (tourSpeedMultiplier === 2 ? 3200 : 6400);
+        clearTimeout(tourTimer);
+        tourTimer = setTimeout(() => {
+          playTourStep(currentTourIndex + 1);
+        }, dwellTime);
+      }
+    }
+
+    function toggleTour() {
+      if (isTourPlaying) {
+        pauseTour();
+      } else {
+        startTour();
+      }
+    }
+
+    function startTour() {
+      isTourPlaying = true;
+      document.getElementById('playIcon').style.display = 'none';
+      document.getElementById('pauseIcon').style.display = 'block';
+      playTourStep(currentTourIndex);
+      toast('Judge Auto-Tour Started (' + (tourSpeedMultiplier === 2 ? '2x' : '1x') + ' speed)');
+    }
+
+    function pauseTour() {
+      isTourPlaying = false;
+      clearTimeout(tourTimer);
+      document.getElementById('playIcon').style.display = 'block';
+      document.getElementById('pauseIcon').style.display = 'none';
+      toast('Tour paused');
+    }
+
+    function tourNext() {
+      pauseTour();
+      currentTourIndex = (currentTourIndex + 1) % tourSteps.length;
+      playTourStep(currentTourIndex);
+    }
+
+    function tourPrev() {
+      pauseTour();
+      currentTourIndex = (currentTourIndex - 1 + tourSteps.length) % tourSteps.length;
+      playTourStep(currentTourIndex);
+    }
+
+    function restartTour() {
+      pauseTour();
+      currentTourIndex = 0;
+      startTour();
+    }
+
+    function toggleSpeed() {
+      const btn = document.getElementById('speedToggleBtn');
+      if (tourSpeedMultiplier === 1) {
+        tourSpeedMultiplier = 2;
+        btn.textContent = '2x SPEED';
+        btn.classList.add('active-2x');
+        toast('Tour speed set to 2x (Fast pitch)');
+      } else {
+        tourSpeedMultiplier = 1;
+        btn.textContent = '1x SPEED';
+        btn.classList.remove('active-2x');
+        toast('Tour speed set to 1x (Normal pitch)');
+      }
+
+      if (isTourPlaying) {
+        clearTimeout(tourTimer);
+        const dwellTime = (tourSpeedMultiplier === 2 ? 3200 : 6400);
+        tourTimer = setTimeout(() => {
+          playTourStep(currentTourIndex + 1);
+        }, dwellTime);
+      }
+    }
+
+    // Spin animation for button loading state
+    const style = document.createElement('style');
+    style.innerHTML = `
+@keyframes spin { 100% { transform: rotate(360deg); } }
+.spin-icon { animation: spin 1s linear infinite; }
+`;
+    document.head.appendChild(style);
+  </script>
+</body>
+
+</html>
